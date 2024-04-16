@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cat</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #game {
+            width: 1500px;
+            height: 800px;
+            box-sizing: border-box;
+            border: 1px solid black;
+            position: relative;
+        }
+
+        #img-cat {
+            position: absolute;
+            width: 300px;
+            /* user-select: none使無法被反白框起來 */
+            user-select: none;
+            /* -webkit-user-drag: none; 使無法拖動 */
+            -webkit-user-drag: none;
+            /* -webkit-user-select: none;使無法選取 */
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="button" value="開始遊戲" id="btn-start">
+    <p id="text-time">0</p>
+    <div id="game">
+        <img src="./cat.jpg" id="img-cat">
+    </div>
+    <audio src="./meow.mp3" volume="0" id="audio-cat"></audio>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.7/sweetalert2.all.min.js' integrity='sha512-sCRQAGZoT2SOdF+QT+pzQaJn2SP9K4t27Au967tsnf3gZNfHcKrkAKudpV2JBu16wsMouvG8C7iNV+dmMgDBgQ==' crossorigin='anonymous'></script>
+
+    <script>
+        const btnStart = document.getElementById('btn-start')
+        const divGame = document.getElementById('game')
+        const imgCat = document.getElementById('img-cat')
+        const textTime = document.getElementById('text-time')
+        const audioCat = document.getElementById('audio-cat')
+
+        //經過時間，單位0.01秒
+        let time = 0
+        // 計時器
+        let timer = 0
+
+        // divGame的對角線距離
+        const divGameMaxDistance =
+            // Math.sqrt()計算平方根
+            Math.sqrt(
+                // Math.pow(x, y)  x 是底數，y 是指數，返回 x 的 y 次方的值。
+                Math.pow(divGame.clientHeight, 2) + Math.pow(divGame.clientWidth, 2)
+            )
+
+        // 貓的中心點座標
+        const catPosition = {
+            x: imgCat.offsetLeft + (imgCat.clientWidth / 2),
+            y: imgCat.offsetTop + (imgCat.clientHeight / 2),
+        }
+
+
+        btnStart.addEventListener('click', () => {
+            // .disabled = true 時，這個元素就會被禁用，意味著它將不再對用戶產生交互作用
+            // 使用情境：登入按鈕等
+            btnStart.disabled = true
+            // 重置遊戲
+            time = 0
+            textTime.innerText = 0
+            audioCat.volume = 0
+            // 使貓透明
+            imgCat.style.opacity = 0
+            // 隨機擺放貓
+            imgCat.style.top = Math.round(Math.random() * 80) + '%'
+            imgCat.style.left = Math.round(Math.random() * 80) + '%'
+            // 貓的中心點座標
+            catPosition.x = imgCat.offsetLeft + (imgCat.clientWidth / 2)
+            catPosition.y = imgCat.offsetTop + (imgCat.clientHeight / 2)
+            // 開始計時
+            timer = setInterval(() => {
+                time++
+                textTime.innerText = time / 100
+                // 固定時間撥放音樂
+                if (time / 300 === 0) {
+                    audioCat.play()
+                }
+            }, 10)
+        })
+
+        divGame.addEventListener('mousemove', (event) => {
+            // 取得滑鼠相對於divGame的座標
+            const mousePosition = {
+                // .offsetX 是水平座標
+                x: event.offsetX,
+                y: event.offsetY,
+            }
+            /*
+            如果滑鼠在貓上面
+            event.offsetX是滑鼠相對於貓的位置
+            所以直接當作在貓上面
+            */
+            if (event.target === imgCat) {
+                mousePosition.x = catPosition.x
+                mousePosition.y = catPosition.y
+            }
+
+            // 計算滑鼠狸貓多遠
+            const distance = Math.sqrt(
+                Math.pow(mousePosition.x - catPosition.x, 2) +
+                Math.pow(mousePosition.y - catPosition.y, 2)
+            )
+            audioCat.volume = 1 - distance / divGameMaxDistance
+        })
+        imgCat.addEventListener('click', () => {
+            /* 若btnStart.disabled不是true(按鈕非停用中)
+            代表不在遊戲中，所以不做後面的程式碼*/
+            if (!btnStart.disabled) return
+            // 使貓出現(1為完全不透明)
+            imgCat.style.opacity = 1
+            // 結束計時
+            clearInterval(timer)
+            // 使按鈕解除停用
+            btnStart.disabled = false
+            // 跳出恭喜找到貓的視窗
+            Swal.fire({
+                icon: 'success',
+                title: '恭喜',
+                text: `你花了${time / 100}秒`
+            })
+        })
+    </script>
+</body>
+
+</html>
